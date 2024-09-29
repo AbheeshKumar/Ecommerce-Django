@@ -30,6 +30,8 @@ CSRF_TRUSTED_ORIGINS = ["https://ecommerce-django-production.up.railway.app"]
 CSRF_ALLOWED_ORIGINS = ["https://ecommerce-django-production.up.railway.app"]
 CORS_ORIGINS_WHITELIST = ["https://ecommerce-django-production.up.railway.app"]
 
+SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
+
 # Application definition
 
 INSTALLED_APPS = [
