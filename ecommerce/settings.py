@@ -65,6 +65,7 @@ CHANNEL_LAYERS = {
 ROOT_URLCONF = "ecommerce.urls"
 SESSION_ENGINE = "django.contrib.sessions.backends.db"
 SESSION_FILE_PATH = "/storage"
+FILE_UPLOAD_TEMP_DIR = "/temp_storage"
 TEMPLATES = [
     {
         "BACKEND": "django.template.backends.django.DjangoTemplates",
