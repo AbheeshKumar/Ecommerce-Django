@@ -52,7 +52,7 @@ class CustomerRegistrationView(View):
         return render(req, "app/cust_register.html", locals())
 
     def post(self, req):
-        form = CustomerRegistrationForm(req.POST)
+        form = CustomerRegistrationForm(req.POST, req.FILES)
         if form.is_valid():
             form.save()
             messages.success(req, "Congratulations, You have registered successfully")

@@ -23,7 +23,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = "django-insecure-#4(n-t2l92%iyjj38v%0o)6=h*q+&4bx0usx*7w6xsz_&!9@0m"
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = False
 
 ALLOWED_HOSTS = ["127.0.0.1", "ecommerce-django-production.up.railway.app"]
 CSRF_TRUSTED_ORIGINS = ["https://ecommerce-django-production.up.railway.app"]
@@ -63,7 +63,8 @@ CHANNEL_LAYERS = {
 }
 
 ROOT_URLCONF = "ecommerce.urls"
-
+SESSION_ENGINE = "django.contrib.sessions.backends.db"
+SESSION_FILE_PATH = "/storage"
 TEMPLATES = [
     {
         "BACKEND": "django.template.backends.django.DjangoTemplates",
