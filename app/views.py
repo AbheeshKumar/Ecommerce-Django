@@ -1,13 +1,13 @@
-from threading import local
+from django.conf import settings
 from django.contrib import messages
-from django.db.models import Q, Count
-from unicodedata import category
-from django.http import HttpResponse, JsonResponse
+from django.db.models import Q
+from django.http import JsonResponse
 from django.shortcuts import redirect, render
 from django.views import View
+import stripe
 
 from .forms import CustomerProfileForm, CustomerRegistrationForm
-from .models import Cart, Customer, Product
+from .models import Cart, Customer, Payment, Product
 
 app_name = "app"
 
@@ -52,7 +52,7 @@ class CustomerRegistrationView(View):
         return render(req, "app/cust_register.html", locals())
 
     def post(self, req):
-        form = CustomerRegistrationForm(req.POST, req.FILES)
+        form = CustomerRegistrationForm(req.POST)
         if form.is_valid():
             form.save()
             messages.success(req, "Congratulations, You have registered successfully")
@@ -208,3 +208,57 @@ def remove_item(req):
             "totalamount": totalamount,
         }
         return JsonResponse(data)
+
+
+def create_checkout_session(req):
+    user = req.user
+    cart = Cart.objects.filter(user=user)
+    list_items = []
+    for item in cart:
+        list_items.append(
+            {
+                "price_data": {
+                    "currency": "pkr",
+                    "product_data": {
+                        "name": item.product.title,
+                        "description": item.product.description,
+                    },
+                    "unit_amount": int(item.product.selling_price) * 100,
+                },
+                "quantity": item.quantity,
+            }
+        )
+    try:
+        checkout_session = stripe.checkout.Session.create(
+            payment_method_types=["card"],
+            client_reference_id=user.id,
+            line_items=list_items,
+            mode="payment",
+            success_url="http://127.0.0.1:8000/" + "success.html",
+            cancel_url="http://127.0.0.1:8000/" + "cancel.html",
+            currency="pkr",
+        )
+        if checkout_session:
+            payment = Payment(
+                user=req.user,
+                amount=checkout_session.amount_total,
+                stripe_order_id=checkout_session.id,
+                stripe_payment_status=checkout_session.status,
+            )
+            payment.save()
+    except Exception as e:
+        return JsonResponse({"error": str(e)})
+
+    return redirect(checkout_session.url, code=303)
+
+
+def payment_done(req):
+    user = req.user
+
+
+def success(req):
+    return render(req, "app/success.html")
+
+
+def cancel(req):
+    return render(req, "app/cancel.html")

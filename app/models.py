@@ -72,9 +72,9 @@ class Cart(models.Model):
 class Payment(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     amount = models.FloatField()
-    razorpay_order_id = models.CharField(max_length=100, blank=True, null=True)
-    razorpay_payment_status = models.CharField(max_length=100, blank=True, null=True)
-    razorpay_payment_id = models.CharField(max_length=100, blank=True, null=True)
+    stripe_order_id = models.CharField(max_length=100, blank=True, null=True)
+    stripe_payment_status = models.CharField(max_length=100, blank=True, null=True)
+    stripe_payment_id = models.CharField(max_length=100, blank=True, null=True)
     paid = models.BooleanField(default=False)
 
 
