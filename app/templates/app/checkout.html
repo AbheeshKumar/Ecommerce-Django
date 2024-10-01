@@ -42,7 +42,7 @@
                             </div>
                         </div>
                         <div class="form-check mt-2 mb-5">
-                            <input class="form-check-input" type="radio" id="custadd{{forloop.counter}}" value="{{ad.id}}"/>
+                            <input class="form-check-input" type="radio" id="custadd{{forloop.counter}}" name="customer" value="{{ad.id}}" onchange="updateCheckoutLink('{{ad.id}}')"/>
                             <label class="form-check-label fw-bold" for="custadd{{forloop.counter}}">
                                 Address: {{forloop.counter}}
                             </label>
@@ -52,8 +52,9 @@
                         <label for="totalamount" class="form-label">Total Amount</label>
                         <input type="number" class="form-control" name="totalamount" value={{totalamount}} readonly>
                     </div>
+                    <button id="get-value" class="btn btn-green">Save details</button>
                     <div class="text-end">
-                        <a href="{% url 'stripe-checkout' %}" method="POST" id="checkout-button" class="btn btn-warning">Payment</a>
+                        <a href="{% url 'stripe-checkout' %}?ad_id=" method="POST" id="checkout-button" class="btn btn-warning">Payment</a>
                     </div>
                 </form>
             </div>
@@ -62,5 +63,12 @@
 {% endblock main %}
 
 {% block payment-gateway %}
-    
+<script>
+    console.log("Working")
+    function updateCheckoutLink(adId) {
+        console.log(adId)
+        const checkoutButton = document.getElementById('checkout-button');
+        checkoutButton.href = "{% url 'stripe-checkout' %}?ad_id=" + adId;
+    }
+</script>
 {% endblock payment-gateway %}

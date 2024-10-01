@@ -1,5 +1,7 @@
+import stat
 from django.conf import settings
 from django.contrib import messages
+from django.contrib.auth.models import User
 from django.db.models import Q
 from django.http import JsonResponse
 from django.shortcuts import redirect, render
@@ -7,7 +9,7 @@ from django.views import View
 import stripe
 
 from .forms import CustomerProfileForm, CustomerRegistrationForm
-from .models import Cart, Customer, Payment, Product
+from .models import Cart, Customer, Order, Payment, Product
 
 app_name = "app"
 
@@ -212,6 +214,7 @@ def remove_item(req):
 
 def create_checkout_session(req):
     user = req.user
+    cust_id = req.POST.get("cust_id")
     cart = Cart.objects.filter(user=user)
     list_items = []
     for item in cart:
@@ -234,18 +237,11 @@ def create_checkout_session(req):
             client_reference_id=user.id,
             line_items=list_items,
             mode="payment",
-            success_url="http://127.0.0.1:8000/" + "success.html",
-            cancel_url="http://127.0.0.1:8000/" + "cancel.html",
+            success_url="http://127.0.0.1:8000/" + "success",
+            cancel_url="http://127.0.0.1:8000/" + "cancel",
             currency="pkr",
         )
-        if checkout_session:
-            payment = Payment(
-                user=req.user,
-                amount=checkout_session.amount_total,
-                stripe_order_id=checkout_session.id,
-                stripe_payment_status=checkout_session.status,
-            )
-            payment.save()
+
     except Exception as e:
         return JsonResponse({"error": str(e)})
 
@@ -253,7 +249,57 @@ def create_checkout_session(req):
 
 
 def payment_done(req):
-    user = req.user
+    payload = req.body
+    sig_header = req.META["HTTP_STRIPE_SIGNATURE"]
+    endpoint_secret = settings.STRIPE_WEBHOOK_SECRET
+    print(payload)
+    try:
+        event = stripe.Webhook.construct_event(payload, sig_header, endpoint_secret)
+    except ValueError as e:
+        return JsonResponse({"error": str(e)}, status=400)
+
+    except stripe.error.SignatureVerificationError as e:
+        return JsonResponse({"error": str(e)}, status=400)
+
+    print("Working")
+    if event["type"] == "checkout.session.completed":
+        session = event["data"]["object"]
+        fullfill_order(session)
+
+    return JsonResponse({"status": "success"}, status=200)
+
+
+def fullfill_order(session):
+    user_id = session.get("client_reference_id")
+    amount_total = session.get("amount_total")
+    payment_status = session.get("payment_status")
+    stripe_order_id = session.get("id")
+    stripe_payment_id = session.get("payment_intent")
+    cust_id = session.get("cust_id")
+
+    user = User.object.get(id=user_id)
+    cart = Cart.objects.filter(user=user)
+
+    payment = Payment.objects.create(
+        user=user,
+        amount=amount_total,
+        stripe_order_id=stripe_order_id,
+        stripe_payment_id=stripe_payment_id,
+        stripe_payment_status=payment_status,
+        paid=True if payment_status == True else False,
+    )
+
+    payment.save()
+    customer = Customer.objects.get(id=cust_id)
+    for item in cart:
+        order = Order.objects.create(
+            user=user,
+            customer=customer,
+            product=item.product,
+            quantity=item.quantity,
+            payment=payment,
+        )
+    order.save()
 
 
 def success(req):
