@@ -94,5 +94,5 @@ urlpatterns = [
     path("stripe-checkout/", views.create_checkout_session, name="stripe-checkout"),
     path("success/", views.success),
     path("cancel/", views.cancel),
-    path("payment-done/", views.payment_done, name="payment done"),
+    path("payment-done/", views.payment_done, name="payment-done"),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

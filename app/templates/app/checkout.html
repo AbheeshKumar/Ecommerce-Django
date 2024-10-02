@@ -54,7 +54,7 @@
                     </div>
                     <button id="get-value" class="btn btn-green">Save details</button>
                     <div class="text-end">
-                        <a href="{% url 'stripe-checkout' %}?ad_id=" method="POST" id="checkout-button" class="btn btn-warning">Payment</a>
+                        <a href="{% url 'stripe-checkout' %}?ad_id=" id="checkout-button" class="btn btn-warning">Payment</a>
                     </div>
                 </form>
             </div>
@@ -64,9 +64,7 @@
 
 {% block payment-gateway %}
 <script>
-    console.log("Working")
     function updateCheckoutLink(adId) {
-        console.log(adId)
         const checkoutButton = document.getElementById('checkout-button');
         checkoutButton.href = "{% url 'stripe-checkout' %}?ad_id=" + adId;
     }
